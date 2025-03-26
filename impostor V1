@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Actuario Impostor</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            display: block;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #D1D5DB;
+            font-size: 1rem;
+            color: #4B5563;
+            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+            transition: border-color 0.15s ease-in-out;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        #results {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        #results p {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #1F2937;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        .alert-danger {
+            background-color: #F87171;
+            color: white;
+        }
+        .alert-success {
+            background-color: #34D399;
+            color: white;
+        }
+        #player-info {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            text-align: center;
+            max-width: 80%;
+            margin-top: 2rem;
+        }
+        #transition-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-purple-400 to-blue-500 min-h-screen flex items-center justify-center py-10">
+    <div class="container">
+        <div class="card">
+            <h1 class="text-2xl font-semibold text-gray-800 mb-6">El Actuario Impostor</h1>
+            <div class="input-group">
+                <label for="player-count">Número de Jugadores:</label>
+                <input type="number" id="player-count" min="3" value="3" placeholder="Ej: 5">
+            </div>
+            <div class="input-group">
+                <label for="impostor-count">Número de Impostores:</label>
+                <input type="number" id="impostor-count" min="1" value="1" placeholder="Ej: 1">
+            </div>
+            <div class="input-group">
+                <label for="difficulty">Nivel de Dificultad:</label>
+                <select id="difficulty">
+                    <option value="facil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="dificil">Difícil</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="rounds">Cantidad de Rondas:</label>
+                <input type="number" id="rounds" min="1" value="1" placeholder="Ej: 3">
+            </div>
+            <button id="start-game" class="btn-primary">Iniciar Partida</button>
+            <div id="results" class="mt-8 hidden">
+                <div id="alert-container">
+                </div>
+            </div>
+        </div>
+        <div id="player-info" class="card hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4":</h2>
+            <p id="player-role" class="text-xl font-bold text-green-600"></p>
+        </div>
+        <div id="transition-overlay" class="hidden">
+            <span id="transition-text"></span>
+        </div>
+    </div>
+    <script>
+        const wordList = {
+            facil: ['Manzana', 'Playa', 'Montaña', 'Libro', 'Ciudad', 'Gato', 'Árbol', 'Sol', 'Luna', 'Estrella'],
+            medio: ['Hipoteca', 'Inversión', 'Accionario', 'Derivado', 'Balance', 'Auditoría', 'Finanzas', 'Mercado', 'Riesgo', 'Contabilidad'],
+            dificil: ['Actuarial', 'Plusvalía', 'Amortización', 'Hipotecario', 'Fideicomiso', 'Obligación', 'Patrimonio', 'Liquidez', 'Solvencia', 'Arbitraje']
+        };
+        function getRandomWord(words, usedWords) {
+            const availableWords = words.filter(word => !usedWords.includes(word));
+            if (availableWords.length === 0) return null;
+            const randomIndex = Math.floor(Math.random() * availableWords.length);
+            return availableWords[randomIndex];
+        }
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+        document.getElementById('start-game').addEventListener('click', function() {
+            const playerCount = parseInt(document.getElementById('player-count').value);
+            const impostorCount = parseInt(document.getElementById('impostor-count').value);
+            const alertContainer = document.getElementById('alert-container');
+            const resultsDiv = document.getElementById('results');
+            const playerInfoDiv = document.getElementById('player-info');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            const transitionText = document.getElementById('transition-text');
+            const difficulty = document.getElementById('difficulty').value;
+            const rounds = parseInt(document.getElementById('rounds').value);
+            resultsDiv.classList.remove('hidden');
+            alertContainer.innerHTML = '';
+            if (playerCount < 3) {
+                alertContainer.innerHTML = `<div class="alert alert-danger">Se necesitan al menos 3 jugadores.</div>`;
+                return;
+            }
+            if (impostorCount < 1) {
+                alertContainer.innerHTML = `<div class="alert alert-danger">Debe haber al menos 1 impostor.</div>`;
+                return;
+            }
+            if (impostorCount >= playerCount) {
+                alertContainer.innerHTML = `<div class="alert alert-danger">El número de impostores debe ser menor que el número de jugadores.</div>`;
+                return;
+            }
+            const usedWords = [];
+            let commonWords = [];
+            for (let i = 0; i < rounds; i++) {
+                let newWord = getRandomWord(wordList[difficulty], usedWords);
+                if (newWord === null) {
+                    alertContainer.innerHTML = `<div class="alert alert-danger">No hay suficientes palabras disponibles para la dificultad seleccionada. Por favor, elija una dificultad diferente o reinicie la página.</div>`;
+                    return;
+                }
+                usedWords.push(newWord);
+                commonWords.push(newWord);
+            }
+            const playerOrder = shuffleArray(Array.from({length: playerCount}, (_, i) => i));
+            let playerRoles = [];
+            let assignedImpostors = 0;
+            for (let i = 0; i < playerCount; i++) {
+                if (assignedImpostors < impostorCount) {
+                    // Randomly assign impostor
+                    if (Math.random() < impostorCount / playerCount && assignedImpostors < impostorCount) {
+                        playerRoles.push({ player: i + 1, role: 'Impostor', roundWords: [] });
+                        assignedImpostors++;
+                    } else {
+                        playerRoles.push({ player: i + 1, role: commonWords, roundWords: [] });
+                    }
+                } else {
+                    playerRoles.push({ player: i + 1, role: commonWords, roundWords: [] });
+                }
+            }
+            // If not enough impostors were assigned, force assign the rest.
+            while (assignedImpostors < impostorCount) {
+                const randomIndex = Math.floor(Math.random() * playerCount);
+                if (playerRoles[randomIndex].role !== 'Impostor') {
+                    playerRoles[randomIndex] = { player: randomIndex + 1, role: 'Impostor', roundWords: [] };
+                    assignedImpostors++;
+                }
+            }
+            alertContainer.innerHTML = `<div class="alert alert-success">La partida ha sido configurada.</div>`;
+            let currentPlayerIndex = 0;
+            let currentRound = 1;
+            const showRole = () => {
+                playerInfoDiv.style.display = 'block';
+                const playerRoleElement = document.getElementById("player-role");
+                let roleText = `Jugador ${playerRoles[currentPlayerIndex].player}, <br><br> tu rol es: `;
+                if (playerRoles[currentPlayerIndex].role === 'Impostor') {
+                    roleText += 'Impostor';
+                } else {
+                    roleText += `<br> ${playerRoles[currentPlayerIndex].role.map((word, index) => `Ronda ${index + 1}: ${word} <br>`).join('')}`;
+                    playerRoles[currentPlayerIndex].roundWords.push(playerRoles[currentPlayerIndex].role);
+                }
+                playerRoleElement.innerHTML = roleText;
+                setTimeout(() => {
+                    playerInfoDiv.style.display = 'none';
+                    if (currentPlayerIndex < playerCount - 1) {
+                        currentPlayerIndex++;
+                        transitionText.textContent = `Pasa el dispositivo al Jugador ${currentPlayerIndex + 1}`;
+                        transitionOverlay.style.display = 'flex';
+                        setTimeout(() => {
+                            transitionOverlay.style.display = 'none';
+                            showRole();
+                        }, 7000);
+                    } else {
+                        alert(`Todos los roles han sido mostrados. ¡Que comience el juego!`);
+                    }
+                }, 5000);
+            };
+            transitionText.textContent = `Comienza con el Jugador 1`;
+            transitionOverlay.style.display = 'flex';
+            setTimeout(() => {
+                transitionOverlay.style.display = 'none';
+                showRole();
+            }, 2000);
+            console.log(playerRoles);
+        });
+    </script>
+</body>
+</html>
